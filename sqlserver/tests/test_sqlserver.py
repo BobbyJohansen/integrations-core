@@ -3,96 +3,27 @@
 # Licensed under a 3-clause BSD style license (see LICENSE)
 
 # stdlib
-import copy
-from nose.plugins.attrib import attr
+# import copy
 
 # project
-from tests.checks.common import AgentCheckTest
-
+import conftest
+from datadog_checks.sqlserver import SQLServer
 
 """
 Runs against AppVeyor's SQLServer setups with their default configurations
 """
 
-CONFIG = {
-    'init_config': {
-        'custom_metrics': [
-            {
-                'name': 'sqlserver.clr.execution',
-                'type': 'gauge',
-                'counter_name': 'CLR Execution',
-            },
-            {
-                'name': 'sqlserver.exec.in_progress',
-                'type': 'gauge',
-                'counter_name': 'OLEDB calls',
-                'instance_name': 'Cumulative execution time (ms) per second',
-            },
-            {
-                'name': 'sqlserver.db.commit_table_entries',
-                'type': 'gauge',
-                'counter_name': 'Log Flushes/sec',
-                'instance_name': 'ALL',
-                'tag_by': 'db',
-            },
-        ],
-    }
-}
 
-SQL2008_INSTANCE = {
-    'host': '(local)\SQL2008R2SP2',
-    'username': 'sa',
-    'password': 'Password12!',
-}
-
-SQL2012_INSTANCE = {
-    'host': '(local)\SQL2012SP1',
-    'username': 'sa',
-    'password': 'Password12!',
-}
-
-SQL2014_INSTANCE = {
-    'host': '(local)\SQL2014',
-    'username': 'sa',
-    'password': 'Password12!',
-}
-
-LINUX_INSTANCE = {
-    'host': 'localhost',
-    'username': 'sa',
-    'password': 'dd-ci',
-}
-
-EXPECTED_METRICS = [
-    'sqlserver.buffer.cache_hit_ratio',
-    'sqlserver.buffer.page_life_expectancy',
-    'sqlserver.stats.batch_requests',
-    'sqlserver.stats.sql_compilations',
-    'sqlserver.stats.sql_recompilations',
-    'sqlserver.stats.connections',
-    'sqlserver.stats.lock_waits',
-    'sqlserver.access.page_splits',
-    'sqlserver.stats.procs_blocked',
-    'sqlserver.buffer.checkpoint_pages',
-]
+def test_check_sql2008(aggregator, spin_up_sqlserver, get_config, get_sql2008_instance):
+    sqlserver_check = SQLServer(conftest.CHECK_NAME, get_config, {})
+    sqlserver_check.check(get_sql2008_instance)
+    aggregator.assert_metric('sqlserver.clr.executioon', count=1)
+    aggregator.assert_metric('sqlserver.exec.in_progress', count=1)
+    for m in aggregator._metrics:
+        print m
 
 
-@attr('unix')
-@attr('fixme')
-@attr(requires='sqlserver')
-class TestSqlserverLinux(AgentCheckTest):
-    """Basic Test for sqlserver integration."""
-    CHECK_NAME = 'sqlserver'
-
-    def test_check(self):
-        config = copy.deepcopy(CONFIG)
-        config['instances'] = [LINUX_INSTANCE]
-
-        self.run_check_twice(config, force_reload=True)
-
-        # FIXME: assert something, someday
-
-
+'''
 @attr('windows')
 @attr(requires='sqlserver')
 class TestSqlserver(AgentCheckTest):
@@ -149,3 +80,19 @@ class TestSqlserver(AgentCheckTest):
 
         self.assertServiceCheckCritical('sqlserver.can_connect',
                                         tags=['host:(local)\SQL2012SP1', 'db:master', 'optional:tag1'])
+
+@attr('unix')
+@attr('fixme')
+@attr(requires='sqlserver')
+class TestSqlserverLinux(AgentCheckTest):
+    """Basic Test for sqlserver integration."""
+
+    def test_check(self):
+        config = copy.deepcopy(CONFIG)
+        config['instances'] = [LINUX_INSTANCE]
+
+        self.run_check_twice(config, force_reload=True)
+
+        # FIXME: assert something, someday
+
+'''

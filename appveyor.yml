@@ -49,10 +49,6 @@ install:
   - cd datadog_checks_base
   - ps: (& "$env:PYTHON/Scripts/pip.exe" install .)
   - cd ..
-  - cd sqlserver
-  - ps: (& "$env:PYTHON/Scripts/pip.exe" install -r requirements.txt)
-  - ps: (& "$env:PYTHON/Scripts/pip.exe" install .)
-  - cd ..
   - cd windows_service
   - ps: (& "$env:PYTHON/Scripts/pip.exe" install .)
   - cd ..
@@ -61,7 +57,6 @@ install:
   - cd ..
 build: off
 test_script:
-  - ddev test datadog_checks_base datadog_checks_tests_helper aspdotnet active_directory dotnetclr exchange_server iis pdh_check
-  - bundle exec rake ci:run[sqlserver]
+  - ddev test datadog_checks_base datadog_checks_tests_helper aspdotnet active_directory dotnetclr exchange_server iis pdh_check sqlserver
   - bundle exec rake ci:run[windows_service]
   - bundle exec rake ci:run[wmi_check]
